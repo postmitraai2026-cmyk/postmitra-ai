@@ -1,0 +1,7 @@
+// Copy this file to config.js and enter values from your NEW Supabase project.
+// This file may be public: use only the publishable/anon key here.
+// NEVER put service_role, AI provider secrets, OAuth client secrets, or payment secrets in this file.
+window.POSTMITRA_CONFIG = {
+  SUPABASE_URL: "https://YOUR_NEW_PROJECT_ID.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY"
+};

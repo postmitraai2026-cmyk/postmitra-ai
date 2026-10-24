@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f97316"><title>PostMitra AI — Social Marketing</title>
+<style>
+:root{--orange:#f97316;--deep:#c2410c;--pale:#fff7ed;--ink:#1f2937;--muted:#64748b;--line:#fed7aa;--white:#fff;--green:#15803d;--red:#b91c1c}
+*{box-sizing:border-box}body{margin:0;background:#fffaf5;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}.muted{color:var(--muted)}.small{font-size:.88rem}.wrap{max-width:1180px;margin:auto;padding:22px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:850;font-size:1.4rem}.logo{display:grid;place-items:center;background:var(--orange);color:white;border-radius:14px;width:44px;height:44px;font-size:1.25rem;box-shadow:0 8px 22px #f9731633}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}.btn{border:0;border-radius:12px;padding:11px 16px;background:var(--orange);color:#fff;font-weight:750}.btn:hover{background:var(--deep)}.btn.alt{background:#fff;color:var(--deep);border:1px solid var(--line)}.btn.danger{background:#fff1f2;color:var(--red);border:1px solid #fecdd3}
+.card{background:white;border:1px solid #f1e5d9;border-radius:20px;padding:20px;box-shadow:0 8px 30px #7c2d1208}.grid{display:grid;gap:18px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.auth{max-width:480px;margin:7vh auto}.hero{padding:28px;background:linear-gradient(130deg,#fff7ed,#fff 62%);border:1px solid var(--line);border-radius:24px;margin-bottom:22px}.hero h1{font-size:clamp(1.8rem,4vw,2.8rem);line-height:1.12;margin:.5rem 0}.pill{display:inline-block;background:#ffedd5;color:#9a3412;padding:5px 10px;border-radius:999px;font-size:.78rem;font-weight:800}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 13px;font-weight:700;color:#9a3412}.tab.active{background:var(--orange);color:white;border-color:var(--orange)}
+label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 6px}input,textarea,select{width:100%;border:1px solid #e7d5c5;border-radius:11px;padding:12px;background:white;color:var(--ink)}textarea{min-height:92px;resize:vertical}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}.notice{padding:12px 14px;border-radius:12px;background:#fff7ed;border:1px solid var(--line);color:#9a3412}.status{font-size:.78rem;font-weight:800;padding:5px 9px;border-radius:999px;background:#f1f5f9}.status.scheduled{background:#fef3c7;color:#92400e}.status.published{background:#dcfce7;color:#166534}.status.failed{background:#fee2e2;color:#991b1b}.metric{font-size:1.9rem;font-weight:850;color:var(--deep)}.post{border:1px solid #f1e5d9;border-radius:14px;padding:14px;margin-top:10px}.plan{position:relative}.price{font-size:2.2rem;font-weight:900;color:var(--deep)}.foot{margin:30px 0 10px;text-align:center;color:var(--muted);font-size:.82rem}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:12px 18px;border-radius:12px;z-index:9;max-width:90%;box-shadow:0 8px 28px #0002}
+@media(max-width:760px){.wrap{padding:14px}.grid.two,.grid.three{grid-template-columns:1fr}.top{align-items:flex-start}.hide-mobile{display:none}.hero{padding:20px}.card{padding:16px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo">✦</div><div>PostMitra <span style="color:var(--orange)">AI</span><div class="muted small" style="font-weight:500">Social media, simplified</div></div></div>
+    <div class="row"><span id="account-label" class="muted small"></span><button id="logout" class="btn alt hidden" onclick="logout()">Sign out</button></div>
+  </header>
+
+  <section id="auth-view" class="auth card">
+    <div class="pill">AI MARKETING WORKSPACE</div>
+    <h1 style="font-size:2rem;margin-bottom:6px">Grow your business, automatically.</h1>
+    <p class="muted">अपना बिजनेस जोड़ें, कंटेंट तैयार करें और सोशल पोस्ट का कैलेंडर संभालें।</p>
+    <div class="tabs"><button class="tab active" id="signin-tab" onclick="setAuthMode('signin')">Sign In</button><button class="tab" id="signup-tab" onclick="setAuthMode('signup')">Create account</button></div>
+    <form id="auth-form">
+      <label for="auth-email">Email address</label><input id="auth-email" type="email" required autocomplete="email" placeholder="you@business.com">
+      <label for="auth-password">Password</label><input id="auth-password" type="password" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters">
+      <label id="name-label" class="hidden" for="auth-name">Your name / आपका नाम</label><input id="auth-name" class="hidden" placeholder="Business owner name">
+      <button class="btn" style="width:100%;margin-top:18px" id="auth-submit">Sign in securely</button>
+    </form>
+    <p id="auth-message" class="small muted" role="status"></p>
+    <div id="config-warning" class="notice small">Setup required: add your new Supabase project URL and publishable key in <code>config.js</code>. No existing project is preselected.</div>
+  </section>
+
+  <main id="app-view" class="hidden">
+    <section class="hero">
+      <div class="pill">YOUR AI MARKETING DESK</div>
+      <h1>हर दिन बेहतर कंटेंट।<br><span style="color:var(--orange)">One workspace. More growth.</span></h1>
+      <p class="muted">Manage your business profile, draft content, schedule posts and prepare brand creatives from one place.</p>
+      <div class="row"><button class="btn" onclick="showSection('studio')">＋ Create a post</button><button class="btn alt" onclick="showSection('calendar')">Open calendar</button></div>
+    </section>
+    <nav class="tabs" aria-label="Main navigation">
+      <button class="tab active" data-section="overview" onclick="showSection('overview')">Overview</button>
+      <button class="tab" data-section="business" onclick="showSection('business')">My business</button>
+      <button class="tab" data-section="studio" onclick="showSection('studio')">AI Content Studio</button>
+      <button class="tab" data-section="calendar" onclick="showSection('calendar')">Post calendar</button>
+      <button class="tab" data-section="plans" onclick="showSection('plans')">Plans & billing</button>
+      <button class="tab" data-section="connections" onclick="showSection('connections')">Connections</button>
+    </nav>
+
+    <section id="section-overview" class="section">
+      <div class="grid three">
+        <div class="card"><div class="muted small">Saved posts</div><div id="metric-total" class="metric">0</div></div>
+        <div class="card"><div class="muted small">Scheduled</div><div id="metric-scheduled" class="metric">0</div></div>
+        <div class="card"><div class="muted small">Published</div><div id="metric-published" class="metric">0</div></div>
+      </div>
+      <div class="grid two" style="margin-top:18px">
+        <div class="card"><h2>Recent content</h2><div id="recent-posts" class="muted small">No saved posts yet.</div></div>
+        <div class="card"><h2>Connect your channels</h2><p class="muted">Link Instagram Professional, Facebook Page and Google Business Profile using official OAuth. Connections are not active until credentials and approvals are configured.</p><button class="btn alt" onclick="showSection('connections')">View connection setup</button></div>
+      </div>
+    </section>
+
+    <section id="section-business" class="section hidden">
+      <div class="card"><h2>Business profile / बिजनेस प्रोफाइल</h2><p class="muted">Your brand details are used for content suggestions. Each signed-in account can only access its own records.</p>
+        <form id="business-form">
+          <label>Business name / दुकान का नाम *</label><input id="business-name" required placeholder="e.g. NEERANJAL">
+          <div class="grid two"><div><label>Business category</label><input id="business-category" placeholder="Drinking water, salon, retail..."></div><div><label>Website URL</label><input id="business-website" type="url" placeholder="https://example.com"></div></div>
+          <label>Brand notes / आपकी खास जानकारी</label><textarea id="business-notes" placeholder="Brand colors, location, offer, tone, contact details..."></textarea>
+          <button class="btn" type="submit">Save business profile</button>
+        </form>
+        <p id="business-status" class="small muted"></p>
+      </div>
+    </section>
+
+    <section id="section-studio" class="section hidden">
+      <div class="grid two">
+        <div class="card"><h2>Content planner</h2><p class="muted">Write a brief to create a content draft. AI provider integration is required for true AI generation.</p>
+          <form id="post-form">
+            <label>Post headline / पोस्ट का शीर्षक *</label><input id="post-headline" required placeholder="A fresh offer for your customers">
+            <label>Post brief / क्या बताना है?</label><textarea id="post-brief" placeholder="Product, offer, target audience, tone, language..."></textarea>
+            <label>Platforms</label><div class="row"><label><input type="checkbox" value="instagram" class="platform" style="width:auto"> Instagram</label><label><input type="checkbox" value="facebook" class="platform" style="width:auto"> Facebook</label><label><input type="checkbox" value="google_business" class="platform" style="width:auto"> Google Business</label></div>
+            <label>Schedule date and time</label><input id="post-time" type="datetime-local">
+            <div class="row" style="margin-top:16px"><button class="btn" type="submit">Save content draft</button><button class="btn alt" type="button" onclick="prepareCopy()">Prepare caption</button></div>
+          </form>
+          <p class="notice small" style="margin-top:14px">Live AI generation and automatic publishing are not enabled until secure backend functions and platform API approvals are configured.</p>
+        </div>
+        <div class="card"><h2>Brand poster preview</h2><div id="poster-preview" style="min-height:280px;background:linear-gradient(140deg,#f97316,#c2410c);border-radius:18px;padding:26px;color:white;display:flex;flex-direction:column;justify-content:space-between"><div style="font-size:.8rem;letter-spacing:.16em">YOUR BRAND • YOUR STORY</div><div><div id="poster-title" style="font-size:2rem;font-weight:900;line-height:1.1">Your headline goes here</div><p id="poster-brief">Add your offer or message to preview it here.</p></div><div style="font-weight:800">POSTMITRA AI</div></div><p class="muted small">This is a browser-based brand preview, not an AI-generated image. Connect an image-generation provider to enable AI posters.</p><button class="btn alt" onclick="downloadPoster()">Download preview PNG</button></div>
+      </div>
+    </section>
+
+    <section id="section-calendar" class="section hidden">
+      <div class="card"><div class="row between"><div><h2>Post calendar</h2><p class="muted">Saved drafts and scheduled items for your business.</p></div><button class="btn" onclick="showSection('studio')">＋ New post</button></div><div id="calendar-posts"></div></div>
+    </section>
+
+    <section id="section-plans" class="section hidden">
+      <div class="grid two">
+        <div class="card plan"><span class="pill">STARTER</span><h2>Starter AI</h2><div class="price">₹999 <span class="small muted">/ month</span></div><p class="muted">For small businesses starting consistent marketing.</p><ul><li>Content planning</li><li>Brand poster tools (subject to usage limits)</li><li>Post calendar</li><li>Supported social connections</li></ul><button class="btn" onclick="requestPlan('starter_999')">Choose Starter</button></div>
+        <div class="card plan"><span class="pill">PRO</span><h2>Professional AI</h2><div class="price">₹1,999 <span class="small muted">/ month</span></div><p class="muted">For businesses needing more automation.</p><ul><li>Higher AI usage limits</li><li>Advanced scheduling</li><li>Business analytics</li><li>Priority support</li></ul><button class="btn" onclick="requestPlan('pro_1999')">Choose Pro</button></div>
+      </div>
+      <p class="notice small" style="margin-top:16px">Subscription checkout is intentionally not activated. A server-side Razorpay subscription flow and verified webhook must be deployed before accepting payment or unlocking a paid plan.</p>
+    </section>
+
+    <section id="section-connections" class="section hidden">
+      <div class="card"><h2>Social connections</h2><p class="muted">No channels are connected yet. Connect only accounts you own or are authorized to manage.</p>
+        <div class="grid three">
+          <div class="post"><h3>Instagram</h3><p class="small muted">Professional account and supported Meta permissions required.</p><span class="status">Not connected</span></div>
+          <div class="post"><h3>Facebook Page</h3><p class="small muted">Page access token and required Meta app permissions required.</p><span class="status">Not connected</span></div>
+          <div class="post"><h3>Google Business</h3><p class="small muted">OAuth access and Google Business Profile API eligibility required.</p><span class="status">Not connected</span></div>
+        </div>
+        <div class="notice small" style="margin-top:16px">OAuth callback URLs, provider app credentials, server-side token storage, and API permissions are required. Never paste secret keys into this page or GitHub.</div>
+      </div>
+    </section>
+    <div class="foot">PostMitra AI · Fresh project starter · Real provider integrations require configuration</div>
+  </main>
+</div>
+<div id="toast" class="hidden" role="status"></div>
+<script>
+let client=null, user=null, authMode='signin', businessId=null, posts=[];
+const $=id=>document.getElementById(id);
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3800)}
+function config(){return window.POSTMITRA_CONFIG||{}}
+function setupClient(){const c=config();if(!window.supabase||!c.SUPABASE_URL||!c.SUPABASE_PUBLISHABLE_KEY||c.SUPABASE_URL.includes('YOUR_'))return false;client=window.supabase.createClient(c.SUPABASE_URL,c.SUPABASE_PUBLISHABLE_KEY);$('config-warning').classList.add('hidden');return true}
+function setAuthMode(mode){authMode=mode;$('signin-tab').classList.toggle('active',mode==='signin');$('signup-tab').classList.toggle('active',mode==='signup');$('name-label').classList.toggle('hidden',mode!=='signup');$('auth-name').classList.toggle('hidden',mode!=='signup');$('auth-submit').textContent=mode==='signup'?'Create account':'Sign in securely';$('auth-password').autocomplete=mode==='signup'?'new-password':'current-password';$('auth-message').textContent=''}
+$('auth-form').addEventListener('submit',async e=>{e.preventDefault();if(!client)return toast('पहले config.js में नया Supabase URL और publishable key सेट करें।');const email=$('auth-email').value.trim(),password=$('auth-password').value;const b=$('auth-submit');b.disabled=true;try{let r;if(authMode==='signup')r=await client.auth.signUp({email,password,options:{data:{display_name:$('auth-name').value.trim()}}});else r=await client.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(authMode==='signup'&&!r.data.session)$('auth-message').textContent='Account created. Check your email to confirm, then sign in.';else if(r.data.user){user=r.data.user;await enterApp()}}catch(err){$('auth-message').textContent=err.message||'Authentication failed'}finally{b.disabled=false}});
+async function logout(){if(client)await client.auth.signOut();user=null;$('app-view').classList.add('hidden');$('auth-view').classList.remove('hidden');$('logout').classList.add('hidden');$('account-label').textContent=''}
+async function enterApp(){if(!user)return;$('auth-view').classList.add('hidden');$('app-view').classList.remove('hidden');$('logout').classList.remove('hidden');$('account-label').textContent=user.email||'Signed in';await loadBusiness();await loadPosts()}
+async function loadBusiness(){if(!client||!user)return;const {data,error}=await client.from('business_profiles').select('*').order('created_at',{ascending:true}).limit(1).maybeSingle();if(error){console.error(error);return}if(data){businessId=data.id;$('business-name').value=data.business_name||'';$('business-category').value=data.business_category||'';$('business-website').value=data.website_url||'';$('business-notes').value=data.brand_notes||''}}
+$('business-form').addEventListener('submit',async e=>{e.preventDefault();if(!client||!user)return;const payload={user_id:user.id,business_name:$('business-name').value.trim(),business_category:$('business-category').value.trim(),website_url:$('business-website').value.trim()||null,brand_notes:$('business-notes').value.trim()||null,updated_at:new Date().toISOString()};try{let r;if(businessId)r=await client.from('business_profiles').update(payload).eq('id',businessId).select().single();else r=await client.from('business_profiles').insert(payload).select().single();if(r.error)throw r.error;businessId=r.data.id;$('business-status').textContent='Business profile saved.';toast('Business profile saved')}catch(err){$('business-status').textContent=err.message;toast('Could not save profile')}});
+$('post-headline').addEventListener('input',updatePoster);$('post-brief').addEventListener('input',updatePoster);
+function updatePoster(){$('poster-title').textContent=$('post-headline').value.trim()||'Your headline goes here';$('poster-brief').textContent=$('post-brief').value.trim()||'Add your offer or message to preview it here.'}
+function selectedPlatforms(){return [...document.querySelectorAll('.platform:checked')].map(x=>x.value)}
+$('post-form').addEventListener('submit',async e=>{e.preventDefault();if(!client||!user)return toast('Supabase setup required');const headline=$('post-headline').value.trim();const time=$('post-time').value;const payload={user_id:user.id,business_profile_id:businessId,headline,caption:$('post-brief').value.trim(),platforms:selectedPlatforms(),status:time?'scheduled':'draft',scheduled_at:time?new Date(time).toISOString():null,brand_name:$('business-name').value.trim()||null,website_url:$('business-website').value.trim()||null};try{const {error}=await client.from('social_posts').insert(payload);if(error)throw error;toast(time?'Scheduled item saved; publisher setup still required.':'Draft saved');$('post-form').reset();updatePoster();await loadPosts();showSection('calendar')}catch(err){toast('Save failed: '+err.message)}});
+async function loadPosts(){if(!client||!user)return;const {data,error}=await client.from('social_posts').select('*').order('created_at',{ascending:false}).limit(100);if(error){toast('Could not load posts: '+error.message);return}posts=data||[];$('metric-total').textContent=posts.length;$('metric-scheduled').textContent=posts.filter(p=>p.status==='scheduled').length;$('metric-published').textContent=posts.filter(p=>p.status==='published').length;$('recent-posts').innerHTML=posts.slice(0,5).map(postHtml).join('')||'<p class="muted small">No saved posts yet.</p>';$('calendar-posts').innerHTML=posts.map(postHtml).join('')||'<p class="muted">No posts saved yet. Create your first draft.</p>'}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function postHtml(p){const dt=p.scheduled_at?new Date(p.scheduled_at).toLocaleString():'Not scheduled';return `<div class="post"><div class="row between"><strong>${escapeHtml(p.headline)}</strong><span class="status ${escapeHtml(p.status)}">${escapeHtml(p.status)}</span></div><p class="small muted">${escapeHtml(p.caption||'')}</p><div class="row between small muted"><span>${escapeHtml((p.platforms||[]).join(', ')||'No platform selected')}</span><span>${escapeHtml(dt)}</span></div></div>`}
+function showSection(name){document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));$('section-'+name).classList.remove('hidden');document.querySelectorAll('[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===name))}
+function prepareCopy(){const text=[$('post-headline').value.trim(),$('post-brief').value.trim(),$('business-name').value.trim(),$('business-website').value.trim()].filter(Boolean).join('\n\n');if(!text)return toast('Add a headline or brief first');navigator.clipboard?.writeText(text).then(()=>toast('Caption brief copied')).catch(()=>toast(text))}
+function downloadPoster(){const title=$('poster-title').textContent,brief=$('poster-brief').textContent;const c=document.createElement('canvas');c.width=1080;c.height=1080;const ctx=c.getContext('2d');const g=ctx.createLinearGradient(0,0,1080,1080);g.addColorStop(0,'#f97316');g.addColorStop(1,'#9a3412');ctx.fillStyle=g;ctx.fillRect(0,0,1080,1080);ctx.fillStyle='#fff';ctx.font='700 30px Arial';ctx.fillText(($('business-name').value||'YOUR BRAND').toUpperCase().slice(0,40),70,100);ctx.font='900 78px Arial';wrapText(ctx,title,70,400,900,94);ctx.font='38px Arial';wrapText(ctx,brief,70,650,900,55);ctx.font='bold 28px Arial';ctx.fillText('POSTMITRA AI',70,990);const a=document.createElement('a');a.download='postmitra-brand-preview.png';a.href=c.toDataURL('image/png');a.click()}
+function wrapText(ctx,text,x,y,maxWidth,lineHeight){let line='';for(const word of String(text).split(' ')){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,y);line=word;y+=lineHeight}else line=test}if(line)ctx.fillText(line,x,y)}
+function requestPlan(plan){toast('Checkout अभी बंद है। Razorpay server-side subscription और verified webhook जोड़ना बाकी है।');console.info('Plan requested:',plan)}
+if(setupClient()){client.auth.getSession().then(({data})=>{if(data.session){user=data.session.user;enterApp()}});client.auth.onAuthStateChange((_event,session)=>{if(session?.user){user=session.user;enterApp()}else if(!session){user=null;$('app-view').classList.add('hidden');$('auth-view').classList.remove('hidden');$('logout').classList.add('hidden')}})}
+</script>
+</body>
+</html>
